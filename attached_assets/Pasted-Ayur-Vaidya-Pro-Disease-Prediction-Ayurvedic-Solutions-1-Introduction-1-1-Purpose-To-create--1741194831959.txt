@@ -1,0 +1,98 @@
+Ayur Vaidya Pro - Disease Prediction & Ayurvedic Solutions
+1. Introduction
+1.1 Purpose
+To create an intelligent system that predicts diseases based on patient symptoms and recommends appropriate Ayurvedic treatments and remedies.
+1.2 Scope
+The system will include symptom analysis, disease prediction, Ayurvedic treatment recommendations, and lifestyle suggestions.
+2. Core Features
+2.1 Symptom Analysis System
+Symptom Input Interface
+Symptom Categories
+Physical symptoms (pain, fever, etc.)
+Mental symptoms (anxiety, depression, etc.)
+Digestive symptoms
+Respiratory symptoms
+Skin-related symptoms
+Other general symptoms
+Symptom Selection Interface
+Multi-select symptom interface
+Severity rating
+Duration input
+Frequency selection
+Additional notes
+2.2 Disease Prediction System
+Disease Database
+Prediction Algorithm
+Symptom matching
+Severity assessment
+Risk factor analysis
+Probability calculation
+Results Display
+Predicted diseases
+Confidence level
+Alternative possibilities
+Risk assessment
+2.3 Ayurvedic Treatment System
+Treatment Database
+Treatment Categories
+Herbal remedies
+Ayurvedic oils
+Dietary recommendations
+Lifestyle changes
+Yoga asanas
+Panchakarma treatments
+Treatment Recommendations
+Personalized treatment plans
+Dosage instructions
+Preparation methods
+Duration guidelines
+Precautions
+2.4 User Interface Components
+Symptom Input Form
+Results Display
+3. Data Structure
+3.1 Mock Data
+4. Implementation Workflow
+4.1 Development Phases
+Phase 1: Core Setup
+Project initialization
+Basic UI components
+Data structure implementation
+Phase 2: Symptom Analysis
+Symptom input interface
+Symptom categorization
+Data validation
+Phase 3: Disease Prediction
+Prediction algorithm
+Results display
+Confidence calculation
+Phase 4: Treatment System
+Treatment database
+Recommendation engine
+Treatment display
+Phase 5: User Experience
+UI/UX improvements
+Mobile responsiveness
+Loading states
+4.2 Component Structure
+5. User Flow
+Symptom Input
+User selects symptoms
+Rates severity
+Provides duration
+Adds additional notes
+Analysis
+System processes symptoms
+Matches with disease database
+Calculates probabilities
+Generates recommendations
+Results Display
+Shows predicted diseases
+Displays confidence levels
+Lists recommended treatments
+Provides lifestyle suggestions
+Treatment Details
+Detailed treatment information
+Preparation instructions
+Dosage guidelines
+Precautions and warnings

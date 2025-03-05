@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Home, Stethoscope, User, ShoppingBag, Activity, MapPin, Menu, X } from 'lucide-react';
+import { Home, Stethoscope, User, ShoppingBag, MapPin, Lotus, LogIn, UserPlus } from 'lucide-react';
 
 export default function Navbar() {
+  // Placeholder for auth state
+  const isAuthenticated = false;
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -31,8 +34,8 @@ export default function Navbar() {
                 Shop
               </Link>
               <Link to="/yoga" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">
-                <Activity className="mr-1 h-4 w-4" />
-                Yoga & Wellness
+                <Lotus className="mr-1 h-4 w-4" />
+                Yoga
               </Link>
               <Link to="/locations" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">
                 <MapPin className="mr-1 h-4 w-4" />
@@ -40,14 +43,27 @@ export default function Navbar() {
               </Link>
             </div>
           </div>
-
-          <div className="hidden md:ml-6 md:flex md:items-center space-x-2">
-            <Link to="/cart" className="relative p-1 rounded-full text-gray-500 hover:text-gray-900">
-              <ShoppingBag className="h-6 w-6" />
-              <span className="absolute top-0 right-0 bg-primary text-white rounded-full h-4 w-4 flex items-center justify-center text-xs">0</span>
-            </Link>
-            <Link to="/login" className="btn btn-outline-primary">Login</Link>
-            <Link to="/register" className="btn btn-primary">Sign Up</Link>
+          <div className="hidden md:ml-6 md:flex md:items-center">
+            {isAuthenticated ? (
+              <div className="ml-3 relative">
+                {/* User profile dropdown would go here */}
+                <button className="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                  <span className="sr-only">View profile</span>
+                  <User className="h-6 w-6" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex space-x-2">
+                <Link to="/login" className="inline-flex items-center px-3 py-1.5 border border-primary text-sm font-medium rounded-md text-primary hover:bg-primary-light hover:text-white">
+                  <LogIn className="mr-1 h-4 w-4" />
+                  Sign In
+                </Link>
+                <Link to="/register" className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark">
+                  <UserPlus className="mr-1 h-4 w-4" />
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}

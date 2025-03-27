@@ -1,10 +1,11 @@
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { predictDiseases, Disease } from '../data/diseases';
 import { Symptom, symptoms, getSymptomById } from '../data/symptoms';
 import { Treatment, treatments, TreatmentCategory, getTreatmentsForDisease } from '../data/treatments';
-import { AlertTriangle, Check, AlertCircle, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Check, AlertCircle, ArrowLeft, Download, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface PredictionResult {
   disease: Disease;
@@ -19,6 +20,9 @@ export default function ResultsPage() {
   const [results, setResults] = useState<PredictionResult[]>([]);
   const [selectedDiseaseId, setSelectedDiseaseId] = useState<string | null>(null);
   const [recommendedTreatments, setRecommendedTreatments] = useState<Treatment[]>([]);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  
+  const reportRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     // Retrieve data from session storage
@@ -94,6 +98,52 @@ export default function ResultsPage() {
   
   const selectedDisease = results.find(result => result.disease.id === selectedDiseaseId)?.disease;
   
+  // Function to generate and download PDF
+  const generatePDF = async () => {
+    if (!reportRef.current) return;
+    
+    setGeneratingPdf(true);
+    
+    try {
+      const reportElement = reportRef.current;
+      const canvas = await html2canvas(reportElement, {
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // Add footer with disclaimer
+      const footerText = 'DISCLAIMER: This report is for informational purposes only and should not be considered as medical advice. Please consult with a qualified healthcare professional.';
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(footerText, 10, 287, { maxWidth: 190 });
+      
+      // Add date and time
+      const dateTime = new Date().toLocaleString();
+      pdf.text(`Generated on: ${dateTime}`, 10, 10);
+      
+      pdf.save('AyurVaidya-Health-Report.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+  
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -105,186 +155,210 @@ export default function ResultsPage() {
   
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <button 
-          onClick={() => navigate('/symptom-checker')}
-          className="flex items-center text-primary hover:underline mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Symptom Checker
-        </button>
-        <h1 className="text-3xl font-bold text-primary">Analysis Results</h1>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <button 
+            onClick={() => navigate('/symptom-checker')}
+            className="flex items-center text-primary hover:underline mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Symptom Checker
+          </button>
+          <h1 className="text-3xl font-bold text-primary">Analysis Results</h1>
+        </div>
+        
+        {results.length > 0 && (
+          <button
+            onClick={generatePDF}
+            disabled={generatingPdf}
+            className="btn btn-primary flex items-center"
+          >
+            {generatingPdf ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Generating...
+              </>
+            ) : (
+              <>
+                <FileText className="h-4 w-4 mr-2" />
+                Download Report
+              </>
+            )}
+          </button>
+        )}
       </div>
       
-      {results.length === 0 ? (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-          <div className="flex">
-            <AlertTriangle className="h-6 w-6 text-yellow-400 mr-3" />
-            <div>
-              <p className="font-medium text-yellow-700">No matches found</p>
-              <p className="text-yellow-600">
-                We couldn't find any conditions matching your symptoms. Please add more symptoms 
-                or consult with a healthcare professional for a proper diagnosis.
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Disclaimer */}
+      <div ref={reportRef}>
+        {results.length === 0 ? (
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
             <div className="flex">
-              <AlertCircle className="h-6 w-6 text-yellow-400 mr-3" />
+              <AlertTriangle className="h-6 w-6 text-yellow-400 mr-3" />
               <div>
-                <p className="font-medium text-yellow-700">Important Disclaimer</p>
+                <p className="font-medium text-yellow-700">No matches found</p>
                 <p className="text-yellow-600">
-                  This analysis is based on the symptoms you provided and is for informational purposes only. 
-                  It should not be considered as a medical diagnosis. Always consult with a qualified healthcare 
-                  professional for proper diagnosis and treatment.
+                  We couldn't find any conditions matching your symptoms. Please add more symptoms 
+                  or consult with a healthcare professional for a proper diagnosis.
                 </p>
               </div>
             </div>
           </div>
-          
-          {/* Selected Symptoms Summary */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-3">Your Symptoms</h2>
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {selectedSymptoms.map(symptom => {
-                  const details = symptomDetails[symptom.id];
-                  return (
-                    <div key={symptom.id} className="flex items-start">
-                      <Check className="h-5 w-5 text-primary mr-2 mt-0.5" />
-                      <div>
-                        <p className="font-medium">{symptom.name}</p>
-                        <p className="text-sm text-gray-600">
-                          {details ? (
-                            <>
-                              {severityOptions[details.severity - 1].label} • 
-                              For {details.durationValue} {details.duration} • 
-                              {frequencyOptions.find(f => f.value === details.frequency)?.label}
-                            </>
-                          ) : 'No details provided'}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-          
-          {/* Diseases and Confidence */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="md:col-span-1">
-              <h2 className="text-xl font-semibold mb-3">Possible Conditions</h2>
-              <div className="space-y-3">
-                {results.map(result => {
-                  const confidenceLevel = getConfidenceLevel(result.confidence);
-                  return (
-                    <div 
-                      key={result.disease.id}
-                      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                        selectedDiseaseId === result.disease.id
-                          ? 'border-primary bg-primary/10'
-                          : 'border-gray-200 hover:border-primary/50'
-                      }`}
-                      onClick={() => handleDiseaseSelect(result.disease.id)}
-                    >
-                      <h3 className="font-medium">{result.disease.name}</h3>
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="text-sm">Confidence:</span>
-                        <span className={`text-sm font-medium ${confidenceLevel.color}`}>
-                          {confidenceLevel.text} ({result.confidence}%)
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+        ) : (
+          <>
+            {/* Disclaimer */}
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+              <div className="flex">
+                <AlertCircle className="h-6 w-6 text-yellow-400 mr-3" />
+                <div>
+                  <p className="font-medium text-yellow-700">Important Disclaimer</p>
+                  <p className="text-yellow-600">
+                    This analysis is based on the symptoms you provided and is for informational purposes only. 
+                    It should not be considered as a medical diagnosis. Always consult with a qualified healthcare 
+                    professional for proper diagnosis and treatment.
+                  </p>
+                </div>
               </div>
             </div>
             
-            <div className="md:col-span-2">
-              {selectedDisease && (
-                <>
-                  <h2 className="text-xl font-semibold mb-3">{selectedDisease.name}</h2>
-                  <div className="bg-white rounded-lg shadow p-4 mb-6">
-                    <h3 className="font-medium mb-2">Description</h3>
-                    <p className="text-gray-700 mb-4">{selectedDisease.description}</p>
+            {/* Selected Symptoms Summary */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-3">Your Symptoms</h2>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {selectedSymptoms.map(symptom => {
+                    const details = symptomDetails[symptom.id];
+                    return (
+                      <div key={symptom.id} className="flex items-start">
+                        <Check className="h-5 w-5 text-primary mr-2 mt-0.5" />
+                        <div>
+                          <p className="font-medium">{symptom.name}</p>
+                          <p className="text-sm text-gray-600">
+                            {details ? (
+                              <>
+                                {severityOptions[details.severity - 1].label} • 
+                                For {details.durationValue} {details.duration} • 
+                                {frequencyOptions.find(f => f.value === details.frequency)?.label}
+                              </>
+                            ) : 'No details provided'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            
+            {/* Diseases and Confidence */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="md:col-span-1">
+                <h2 className="text-xl font-semibold mb-3">Possible Conditions</h2>
+                <div className="space-y-3">
+                  {results.map(result => {
+                    const confidenceLevel = getConfidenceLevel(result.confidence);
+                    return (
+                      <div 
+                        key={result.disease.id}
+                        className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                          selectedDiseaseId === result.disease.id
+                            ? 'border-primary bg-primary/10'
+                            : 'border-gray-200 hover:border-primary/50'
+                        }`}
+                        onClick={() => handleDiseaseSelect(result.disease.id)}
+                      >
+                        <h3 className="font-medium">{result.disease.name}</h3>
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="text-sm">Confidence:</span>
+                          <span className={`text-sm font-medium ${confidenceLevel.color}`}>
+                            {confidenceLevel.text} ({result.confidence}%)
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div className="md:col-span-2">
+                {selectedDisease && (
+                  <>
+                    <h2 className="text-xl font-semibold mb-3">{selectedDisease.name}</h2>
+                    <div className="bg-white rounded-lg shadow p-4 mb-6">
+                      <h3 className="font-medium mb-2">Description</h3>
+                      <p className="text-gray-700 mb-4">{selectedDisease.description}</p>
+                      
+                      {selectedDisease.riskFactors && (
+                        <>
+                          <h3 className="font-medium mb-2">Risk Factors</h3>
+                          <ul className="list-disc list-inside text-gray-700">
+                            {selectedDisease.riskFactors.map((factor, index) => (
+                              <li key={index}>{factor}</li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                    </div>
                     
-                    {selectedDisease.riskFactors && (
-                      <>
-                        <h3 className="font-medium mb-2">Risk Factors</h3>
-                        <ul className="list-disc list-inside text-gray-700">
-                          {selectedDisease.riskFactors.map((factor, index) => (
-                            <li key={index}>{factor}</li>
-                          ))}
-                        </ul>
-                      </>
-                    )}
-                  </div>
-                  
-                  <h2 className="text-xl font-semibold mb-3">Recommended Treatments</h2>
-                  
-                  {Object.entries(treatmentsByCategory).length > 0 ? (
-                    <div className="space-y-6">
-                      {Object.entries(treatmentsByCategory).map(([category, categoryTreatments]) => (
-                        <div key={category} className="space-y-3">
-                          <h3 className="font-medium text-lg">{category}</h3>
-                          {categoryTreatments.map(treatment => (
-                            <div key={treatment.id} className="bg-white rounded-lg shadow p-4">
-                              <h4 className="font-medium text-primary mb-1">{treatment.name}</h4>
-                              <p className="text-gray-700 mb-3">{treatment.description}</p>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                {treatment.instructions && (
-                                  <div>
-                                    <p className="font-medium">Instructions:</p>
-                                    <p>{treatment.instructions}</p>
-                                  </div>
-                                )}
+                    <h2 className="text-xl font-semibold mb-3">Recommended Treatments</h2>
+                    
+                    {Object.entries(treatmentsByCategory).length > 0 ? (
+                      <div className="space-y-6">
+                        {Object.entries(treatmentsByCategory).map(([category, categoryTreatments]) => (
+                          <div key={category} className="space-y-3">
+                            <h3 className="font-medium text-lg">{category}</h3>
+                            {categoryTreatments.map(treatment => (
+                              <div key={treatment.id} className="bg-white rounded-lg shadow p-4">
+                                <h4 className="font-medium text-primary mb-1">{treatment.name}</h4>
+                                <p className="text-gray-700 mb-3">{treatment.description}</p>
                                 
-                                {treatment.dosage && (
-                                  <div>
-                                    <p className="font-medium">Dosage:</p>
-                                    <p>{treatment.dosage}</p>
-                                  </div>
-                                )}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                  {treatment.instructions && (
+                                    <div>
+                                      <p className="font-medium">Instructions:</p>
+                                      <p>{treatment.instructions}</p>
+                                    </div>
+                                  )}
+                                  
+                                  {treatment.dosage && (
+                                    <div>
+                                      <p className="font-medium">Dosage:</p>
+                                      <p>{treatment.dosage}</p>
+                                    </div>
+                                  )}
+                                  
+                                  {treatment.duration && (
+                                    <div>
+                                      <p className="font-medium">Duration:</p>
+                                      <p>{treatment.duration}</p>
+                                    </div>
+                                  )}
+                                </div>
                                 
-                                {treatment.duration && (
-                                  <div>
-                                    <p className="font-medium">Duration:</p>
-                                    <p>{treatment.duration}</p>
+                                {treatment.precautions && treatment.precautions.length > 0 && (
+                                  <div className="mt-3">
+                                    <p className="font-medium text-sm">Precautions:</p>
+                                    <ul className="list-disc list-inside text-sm text-gray-700">
+                                      {treatment.precautions.map((precaution, index) => (
+                                        <li key={index}>{precaution}</li>
+                                      ))}
+                                    </ul>
                                   </div>
                                 )}
                               </div>
-                              
-                              {treatment.precautions && treatment.precautions.length > 0 && (
-                                <div className="mt-3">
-                                  <p className="font-medium text-sm">Precautions:</p>
-                                  <ul className="list-disc list-inside text-sm text-gray-700">
-                                    {treatment.precautions.map((precaution, index) => (
-                                      <li key={index}>{precaution}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-white rounded-lg shadow p-4">
-                      <p>No specific treatments found for this condition.</p>
-                    </div>
-                  )}
-                </>
-              )}
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-white rounded-lg shadow p-4">
+                        <p>No specific treatments found for this condition.</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

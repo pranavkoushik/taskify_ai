@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Symptom, SymptomCategory, symptoms, getSymptomsByCategory } from '../data/symptoms';
@@ -41,6 +40,30 @@ export default function SymptomCheckerPage() {
     frequency: string;
     notes: string;
   }>>({});
+
+  // Add user information state
+  const [userInfo, setUserInfo] = useState({
+    age: '',
+    gender: '',
+    location: '',
+    dietaryHabits: '',
+    physicalActivity: '',
+    smokingStatus: 'non-smoker',
+    alcoholConsumption: '',
+    chronicConditions: '',
+    mentalHealth: '',
+    sleepPatterns: '',
+    hydrationLevels: '',
+    medicalHistory: ''
+  });
+
+  // Handle user info changes
+  const handleUserInfoChange = (field: string, value: string) => {
+    setUserInfo(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
   
   // Get symptoms for the active category
   const categorySymptoms = getSymptomsByCategory(activeTab);
@@ -86,7 +109,7 @@ export default function SymptomCheckerPage() {
     }));
   };
   
-  // Submit symptoms for analysis
+  // Update analyzeSymptoms to include user info
   const analyzeSymptoms = () => {
     if (selectedSymptoms.length === 0) {
       alert('Please select at least one symptom.');
@@ -96,6 +119,7 @@ export default function SymptomCheckerPage() {
     // Store data in session storage to use on results page
     sessionStorage.setItem('selectedSymptoms', JSON.stringify(selectedSymptoms));
     sessionStorage.setItem('symptomDetails', JSON.stringify(symptomDetails));
+    sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
     
     // Navigate to results page
     navigate('/results');
@@ -107,14 +131,179 @@ export default function SymptomCheckerPage() {
       
       <div className="mb-8">
         <p className="text-lg mb-4">
-          Select your symptoms below and provide details about their severity, duration, and frequency 
-          for a more accurate analysis.
+          Please provide your information and select your symptoms below for a more accurate analysis.
         </p>
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
           <p className="text-sm text-yellow-700">
             <strong>Note:</strong> This tool is for informational purposes only and should not replace 
             professional medical advice. Always consult with a healthcare provider for proper diagnosis and treatment.
           </p>
+        </div>
+      </div>
+
+      {/* User Information Form */}
+      <div className="mb-8 bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Basic Information */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
+            <input
+              type="number"
+              value={userInfo.age}
+              onChange={(e) => handleUserInfoChange('age', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+              placeholder="Enter your age"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+            <select
+              value={userInfo.gender}
+              onChange={(e) => handleUserInfoChange('gender', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+            >
+              <option value="">Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+            <input
+              type="text"
+              value={userInfo.location}
+              onChange={(e) => handleUserInfoChange('location', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+              placeholder="City, State"
+            />
+          </div>
+
+          {/* Lifestyle Habits */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Dietary Habits</label>
+            <select
+              value={userInfo.dietaryHabits}
+              onChange={(e) => handleUserInfoChange('dietaryHabits', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+            >
+              <option value="">Select diet type</option>
+              <option value="vegetarian">Vegetarian</option>
+              <option value="vegan">Vegan</option>
+              <option value="non-vegetarian">Non-vegetarian</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Physical Activity</label>
+            <select
+              value={userInfo.physicalActivity}
+              onChange={(e) => handleUserInfoChange('physicalActivity', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+            >
+              <option value="">Select activity level</option>
+              <option value="sedentary">Sedentary</option>
+              <option value="light">Light Exercise</option>
+              <option value="moderate">Moderate Exercise</option>
+              <option value="active">Very Active</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Smoking Status</label>
+            <select
+              value={userInfo.smokingStatus}
+              onChange={(e) => handleUserInfoChange('smokingStatus', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+            >
+              <option value="non-smoker">Non-smoker</option>
+              <option value="ex-smoker">Ex-smoker</option>
+              <option value="current-smoker">Current smoker</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Alcohol Consumption</label>
+            <select
+              value={userInfo.alcoholConsumption}
+              onChange={(e) => handleUserInfoChange('alcoholConsumption', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+            >
+              <option value="">Select frequency</option>
+              <option value="never">Never</option>
+              <option value="occasional">Occasional</option>
+              <option value="moderate">Moderate</option>
+              <option value="frequent">Frequent</option>
+            </select>
+          </div>
+
+          {/* Health Information */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Chronic Conditions</label>
+            <textarea
+              value={userInfo.chronicConditions}
+              onChange={(e) => handleUserInfoChange('chronicConditions', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+              rows={2}
+              placeholder="List any chronic conditions (e.g., diabetes, hypertension)"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mental Health</label>
+            <textarea
+              value={userInfo.mentalHealth}
+              onChange={(e) => handleUserInfoChange('mentalHealth', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+              rows={2}
+              placeholder="Describe any mental health concerns (e.g., stress, anxiety)"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sleep Patterns</label>
+            <select
+              value={userInfo.sleepPatterns}
+              onChange={(e) => handleUserInfoChange('sleepPatterns', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+            >
+              <option value="">Select sleep pattern</option>
+              <option value="less-than-6">Less than 6 hours</option>
+              <option value="6-8">6-8 hours</option>
+              <option value="more-than-8">More than 8 hours</option>
+              <option value="irregular">Irregular</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Daily Water Intake</label>
+            <select
+              value={userInfo.hydrationLevels}
+              onChange={(e) => handleUserInfoChange('hydrationLevels', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+            >
+              <option value="">Select water intake</option>
+              <option value="less-than-1L">Less than 1L</option>
+              <option value="1-2L">1-2 Liters</option>
+              <option value="2-3L">2-3 Liters</option>
+              <option value="more-than-3L">More than 3L</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Medical History</label>
+            <textarea
+              value={userInfo.medicalHistory}
+              onChange={(e) => handleUserInfoChange('medicalHistory', e.target.value)}
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+              rows={3}
+              placeholder="List any significant medical history, surgeries, or ongoing treatments"
+            />
+          </div>
         </div>
       </div>
       

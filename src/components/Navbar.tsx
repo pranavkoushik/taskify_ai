@@ -7,11 +7,18 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white shadow">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-12 lg:px-16">
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link to="/" className="text-primary font-bold text-xl">Ayur Vaidya Pro</Link>
+              <Link to="/" className="flex items-center">
+                <img 
+                  src="/src/images/ayur vaidya logo.png" 
+                  alt="Ayur Vaidya Logo" 
+                  className="h-12 w-auto mr-3" 
+                />
+                <span className="text-primary font-bold text-xl">Ayur Vaidya Pro</span>
+              </Link>
             </div>
             <div className="hidden md:ml-6 md:flex md:space-x-4">
               <Link to="/" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
